@@ -1,0 +1,32 @@
+# pull official base image
+FROM ubuntu:latest
+ENV TZ=Asia/Kolkata
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+# Install DEB dependencies and others.
+RUN apt update \
+    && apt install -y gcc \
+                git \
+  && DEBIAN_FRONTEND=noninteractive apt-get -y --no-install-recommends install \
+    #    set -x \
+        && apt-get update \
+        && apt-get install -y net-tools build-essential \
+              wget \
+                software-properties-common \
+                python-dev \
+                vim \
+                curl \
+                mongodb-clients 
+
+RUN curl -sL https://deb.nodesource.com/setup_10.x -o nodesource_setup.sh 
+RUN  bash nodesource_setup.sh 
+RUN  apt-get update && apt-get install nodejs
+# set and create the appropriate directories
+WORKDIR /var/www/html/
+ENV APP_HOME=/var/www/html/
+
+
+# Installing supervisor service and creating directories for copy supervisor configurations
+RUN apt-get -y install supervisor && mkdir -p /var/log/supervisor && mkdir -p /etc/supervisor/conf.d
+ADD supervisor.conf /etc/supervisor.conf
+#CMD ["nginx", "-g", "daemon off;"]
+CMD ["supervisord", "-c", "/etc/supervisor.conf"]   # starting supervisord service

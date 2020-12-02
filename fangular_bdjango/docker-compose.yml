@@ -1,0 +1,30 @@
+version: '3'
+services:
+    postgres:
+        image: postgres:10.12-alpine
+        container_name: lendingally_db
+        networks:
+            LA_network:
+                ipv4_address: 172.28.1.2
+        restart: always
+        #        privileged: true 
+        volumes:
+            - ./postgres:/var/lib/postgresql/data/
+        ports:
+             - 5442:5432
+        environment:
+              POSTGRES_DB: "lendingally"
+              SQL_ENGINE: django.db.backends.postgresql
+              POSTGRES_USER: username
+              POSTGRES_PASSWORD: password
+              SQL_HOST: db
+              SQL_PORT: 5432
+networks:
+    LA_network:
+        ipam:
+            driver: default
+            config:
+                - subnet: 172.28.0.0/16
+volumes:
+    nginxlogs:
+

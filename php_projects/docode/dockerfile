@@ -1,0 +1,52 @@
+FROM ubuntu:latest
+
+MAINTAINER Karan Kapoor <karan.kapoor@softuvo.com>
+
+ARG DEBIAN_FRONTEND=noninteractive
+###########Install Laravel dependencies###########
+RUN apt-get update \
+    && apt install -y gcc \
+                git \
+  && DEBIAN_FRONTEND=noninteractive apt-get -y --no-install-recommends install \
+        software-properties-common \
+        git  \
+        wget \
+        curl 
+##########################################################
+RUN LC_ALL=C.UTF-8 apt-add-repository -y ppa:ondrej/php && apt-get update -y
+ARG DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y \
+    php \
+    php7.2-cli \
+    mcrypt \
+        curl \
+       php7.2-curl \
+      php7.2-mbstring  \
+ #  && mkdir /run/php \
+            nodejs \
+            git \
+            php-fpm
+WORKDIR /run/php
+
+RUN  apt-add-repository -r ppa:nginx/stable && \
+  apt-get update && \
+  apt-get install -y  nginx && \
+  rm -rf /var/lib/apt/lists/* 
+RUN  apt-add-repository -r ppa:certbot/certbot && \
+ apt update && apt install -y   python3-certbot-nginx
+
+########## Install Composer
+RUN curl -sS https://getcomposer.org/installer -o composer-setup.php && \
+    php composer-setup.php --install-dir=/usr/local/bin --filename=composer
+
+
+
+########################
+EXPOSE 80
+EXPOSE 443
+CMD ["nginx", "-g", "daemon off;"]
+
+WORKDIR /var/www/html/jamon
+#RUN chown -R www-data:www:data /var/www/html/
+#RUN cd .. /
+COPY ./jamon /var/www/html/jamon;

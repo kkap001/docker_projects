@@ -1,0 +1,97 @@
+# pull official base image
+FROM ubuntu:latest 
+
+# set and create the appropriate directories
+WORKDIR /var/www/html/
+ENV APP_HOME=/var/www/html/LendingAlly
+RUN mkdir -p $APP_HOME
+WORKDIR $APP_HOME
+WORKDIR /var/www/html/LendingAlly/lendingbackend
+WORKDIR /var/www/html/LendingAlly/lendingfrontend
+
+# set environment variables
+#ENV PYTHONDONTWRITEBYTECODE 1
+#ENV PYTHONUNBUFFERED 1
+
+# install psycopg2 dependencies
+RUN apt update \
+    && apt install -y gcc \ 
+		git \
+  && DEBIAN_FRONTEND=noninteractive apt-get -y --no-install-recommends install \
+		python3-pip \
+		python3-dev \
+	        wget \	
+                software-properties-common \
+      		libmysqlclient-dev \
+                libpq-dev \
+                python-dev \
+                vim \
+                curl \
+                postgresql-client \
+                postgresql-contrib \
+		unattended-upgrades && \
+	rm -r /var/lib/apt/lists/*
+
+#RUN apt-get install libapache2-mod-wsgi -y
+RUN pip3 install --upgrade pip 
+
+# install dependencies
+RUN apt-get update && apt-get install -y \
+      curl \
+      npm \
+      nodejs \
+      git
+
+
+ARG DEBIAN_FRONTEND=noninteractive
+# Install Nginx.
+RUN \
+  apt-add-repository -r ppa:nginx/stable && \
+  apt-get update && \
+  apt-get install -y  nginx && \
+  rm -rf /var/lib/apt/lists/* 
+#  chown -R www-data:www-data /var/lib/nginx
+
+# Define mountable directories.
+#VOLUME ["/etc/nginx/sites-enabled", "/etc/nginx/certs", "/etc/nginx/conf.d", "/var/log/nginx", "/var/www/html"]
+
+# Define working directory.
+
+# Define default command.CMD ["nginx"]
+
+
+#######Certbot####
+RUN apt-add-repository -r ppa:certbot/certbot
+RUN apt update 
+RUN apt install -y python3-certbot-nginx \
+         virtualenv
+
+
+# install nvm
+RUN curl https://raw.githubusercontent.com/creationix/nvm/v0.24.1/install.sh | sh;
+
+# invoke nvm to install node
+RUN cp -f ~/.nvm/nvm.sh ~/.nvm/nvm-tmp.sh; \
+    echo "nvm install 10.20.1; nvm alias default 10.20.1" >> ~/.nvm/nvm-tmp.sh; \
+    sh ~/.nvm/nvm-tmp.sh; \
+    rm ~/.nvm/nvm-tmp.sh;
+
+RUN cd /var/www/html/LendingAlly/lendingfrontend
+#COPY package.json .
+RUN npm install -y
+RUN npm link @angular/cli@9.0.6 -y
+RUN apt install -y certbot
+#RUN cd /var/www/html/LendingAlly/lendingbackend
+#RUN pip install -r requirements.txt
+#RUN python3 manage.py runserver 0.0.0.0:8000 
+#RUN npm run start
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+CMD ["nginx", "-g", "daemon off;"]
+COPY nboot.sh .
+ENTRYPOINT ["/bin/bash", "nboot.sh"]
+EXPOSE 80
+EXPOSE 443
+EXPOSE 4200
+#CMD ["nginx", "-g", "daemon off;"]
+

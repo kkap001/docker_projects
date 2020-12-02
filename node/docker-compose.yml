@@ -1,0 +1,25 @@
+version: '3'
+services:
+    mediasoup:
+        build:
+         context: ./docode
+        container_name: msoup 
+        volumes:
+             - ./code:/var/www/html/
+               # - ./letsencrypt:/etc/letsencrypt
+        ports:
+             - 903:80
+             - 904:443
+             - 3000:3000
+             - 3001:3001
+             - 4443:4443 
+        networks:
+            node_nw:
+                ipv4_address: 172.30.55.4
+        restart: always
+networks:
+    node_nw:
+        ipam:
+            driver: default
+            config:
+                - subnet: 172.30.55.0/16
